@@ -1,0 +1,3 @@
+# WishDesk is a private staff tool
+User-agent: *
+Disallow: /

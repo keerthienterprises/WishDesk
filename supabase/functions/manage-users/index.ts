@@ -5,18 +5,36 @@
 //       { action: 'set_active', user_id, is_active }
 import { createClient } from 'npm:@supabase/supabase-js@2'
 
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-}
-
-const json = (body: unknown, status = 200) =>
-  new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
+// Only WishDesk's own addresses may call this function from a browser
+const ALLOWED_ORIGINS = [
+  'https://wishdesk.keerthienterprises.com',
+  'https://wish-desk.vercel.app',
+  'http://localhost:5173',
+  'http://localhost:4173',
+]
 
 const ROLES = ['admin', 'team_lead', 'member']
 
+// Same rule as src/lib/password.js
+function passwordProblem(password: unknown) {
+  if (typeof password !== 'string' || password.length < 8) return 'Password must be at least 8 characters'
+  if (!/[A-Za-z]/.test(password) || !/\d/.test(password)) return 'Password must include a letter and a number'
+  return null
+}
+
 Deno.serve(async (req) => {
+  // CORS headers are worked out per request (never shared between concurrent requests)
+  const origin = req.headers.get('Origin') ?? ''
+  const cors = {
+    'Access-Control-Allow-Origin': ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0],
+    'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+    'Access-Control-Allow-Methods': 'POST, OPTIONS',
+    'Vary': 'Origin',
+  }
+  const json = (body: unknown, status = 200) =>
+    new Response(JSON.stringify(body), { status, headers: { ...cors, 'Content-Type': 'application/json' } })
   if (req.method === 'OPTIONS') return new Response('ok', { headers: cors })
+  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405)
 
   try {
     const url = Deno.env.get('SUPABASE_URL')!
@@ -40,7 +58,9 @@ Deno.serve(async (req) => {
     if (body.action === 'create') {
       const { email, password, full_name } = body
       const role = ROLES.includes(body.role) ? body.role : 'member'
-      if (!email || !password || password.length < 6) return json({ error: 'Email and a 6+ character password are required' }, 400)
+      if (!email) return json({ error: 'Email is required' }, 400)
+      const weak = passwordProblem(password)
+      if (weak) return json({ error: weak }, 400)
       // The role goes in app_metadata: only the server can set it, so nobody can pick their own role
       const { data, error } = await admin.auth.admin.createUser({
         email,
@@ -58,7 +78,8 @@ Deno.serve(async (req) => {
 
     if (body.action === 'reset_password') {
       if (!body.user_id) return json({ error: 'user_id is required' }, 400)
-      if (!body.password || body.password.length < 6) return json({ error: 'Password must be 6+ characters' }, 400)
+      const weak = passwordProblem(body.password)
+      if (weak) return json({ error: weak }, 400)
       const { error } = await admin.auth.admin.updateUserById(body.user_id, { password: body.password })
       if (error) return json({ error: error.message }, 400)
       return json({ ok: true })

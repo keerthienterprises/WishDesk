@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react'
-import { Building2, KeyRound, Smartphone, UserRound } from 'lucide-react'
+import { Building2, DatabaseBackup, KeyRound, Smartphone, UserRound } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 import { useSettings } from '../context/SettingsContext'
 import { useToast } from '../context/ToastContext'
 import { supabase } from '../lib/supabase'
 import { roleLabel } from '../lib/roles'
+import { PASSWORD_HINT, passwordProblem } from '../lib/password'
+import { downloadBackup } from '../lib/backup'
 import { Avatar, Field, PageHeader, PasswordInput } from '../components/ui'
 
 export default function Settings() {
@@ -16,7 +18,21 @@ export default function Settings() {
   const [confirmPw, setConfirmPw] = useState('')
   const [org, setOrg] = useState(settings)
 
+  const [backingUp, setBackingUp] = useState('')
+
   useEffect(() => setOrg(settings), [settings])
+
+  async function backup() {
+    setBackingUp('Starting…')
+    try {
+      const counts = await downloadBackup((step) => setBackingUp(`Saving ${step}…`))
+      toast(`Backup downloaded: ${counts.contacts} contacts, ${counts.campaigns} campaigns.`, 'success')
+    } catch (e) {
+      toast(`Backup failed: ${e.message}`, 'error')
+    } finally {
+      setBackingUp('')
+    }
+  }
 
   async function saveName(e) {
     e.preventDefault()
@@ -28,6 +44,8 @@ export default function Settings() {
 
   async function savePassword(e) {
     e.preventDefault()
+    const weak = passwordProblem(password)
+    if (weak) return toast(weak, 'error')
     if (password !== confirmPw) return toast('Passwords do not match', 'error')
     const { error } = await supabase.auth.updateUser({ password })
     if (error) return toast(error.message, 'error')
@@ -70,12 +88,12 @@ export default function Settings() {
       <section className="card settings-section">
         <div className="settings-intro">
           <KeyRound size={20} />
-          <div><h3>Password</h3><p className="muted small">Use at least 6 characters.</p></div>
+          <div><h3>Password</h3><p className="muted small">{PASSWORD_HINT}</p></div>
         </div>
         <form onSubmit={savePassword} className="settings-body form-grid">
-          <Field label="New password"><PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required /></Field>
-          <Field label="Confirm password"><PasswordInput value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} minLength={6} required /></Field>
-          <div className="row-end span-2"><button className="btn btn-primary" disabled={password.length < 6}>Change password</button></div>
+          <Field label="New password"><PasswordInput value={password} onChange={(e) => setPassword(e.target.value)} minLength={8} required autoComplete="new-password" /></Field>
+          <Field label="Confirm password"><PasswordInput value={confirmPw} onChange={(e) => setConfirmPw(e.target.value)} minLength={8} required autoComplete="new-password" /></Field>
+          <div className="row-end span-2"><button className="btn btn-primary" disabled={Boolean(passwordProblem(password))}>Change password</button></div>
         </form>
       </section>
 
@@ -94,6 +112,23 @@ export default function Settings() {
             </Field>
             <div className="row-end span-2"><button className="btn btn-primary">Save organisation</button></div>
           </form>
+        </section>
+      )}
+
+      {isAdmin && (
+        <section className="card settings-section">
+          <div className="settings-intro">
+            <DatabaseBackup size={20} />
+            <div><h3>Backup</h3><p className="muted small">Keep a copy of all your data. Do this at least once a month.</p></div>
+          </div>
+          <div className="settings-body">
+            <p className="muted">Downloads every contact, campaign, greeting, template and the activity log as one ZIP file. Store it somewhere safe, such as Google Drive.</p>
+            <div className="row-end">
+              <button className="btn btn-primary" onClick={backup} disabled={Boolean(backingUp)}>
+                <DatabaseBackup size={15} /> {backingUp || 'Download full backup'}
+              </button>
+            </div>
+          </div>
         </section>
       )}
 

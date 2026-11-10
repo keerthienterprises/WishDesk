@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { manageUsers, supabase } from '../lib/supabase'
 import { ROLES } from '../lib/roles'
+import { PASSWORD_HINT, passwordProblem } from '../lib/password'
 import { fetchAll, fetchTeam } from '../lib/data'
 import { formatDate, todayIso } from '../lib/dates'
 import { Avatar, Field, Modal, PageHeader, Spinner, StatCard } from '../components/ui'
@@ -133,6 +134,8 @@ function InviteModal({ onClose, onDone }) {
 
   async function submit(e) {
     e.preventDefault()
+    const weak = passwordProblem(form.password)
+    if (weak) return setError(weak)
     setBusy(true)
     setError('')
     try {
@@ -161,7 +164,7 @@ function InviteModal({ onClose, onDone }) {
       <form id="invite-form" onSubmit={submit}>
         <Field label="Full name"><input value={form.full_name} onChange={set('full_name')} required autoFocus /></Field>
         <Field label="Work email"><input type="email" value={form.email} onChange={set('email')} required /></Field>
-        <Field label="Temporary password" hint="At least 6 characters. Ask them to change it in Settings."><input value={form.password} onChange={set('password')} minLength={6} required /></Field>
+        <Field label="Temporary password" hint={`${PASSWORD_HINT} Ask them to change it in Settings.`}><input value={form.password} onChange={set('password')} minLength={8} required autoComplete="new-password" /></Field>
         <Field label="Role">
           <div className="role-options">
             {Object.entries(ROLES).map(([k, r]) => (
@@ -205,12 +208,12 @@ function ResetPasswordModal({ user, onClose }) {
       footer={
         <>
           <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" form="reset-form" disabled={busy || password.length < 6}>Update</button>
+          <button className="btn btn-primary" form="reset-form" disabled={busy || Boolean(passwordProblem(password))}>Update</button>
         </>
       }
     >
       <form id="reset-form" onSubmit={submit}>
-        <Field label="New password" hint="At least 6 characters"><input value={password} onChange={(e) => setPassword(e.target.value)} autoFocus /></Field>
+        <Field label="New password" hint={PASSWORD_HINT}><input value={password} onChange={(e) => setPassword(e.target.value)} autoFocus /></Field>
       </form>
     </Modal>
   )
