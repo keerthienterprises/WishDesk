@@ -10,6 +10,7 @@ export default function Login() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [busy, setBusy] = useState(false)
+  const [reduceMotion] = useState(() => window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false)
 
   if (user) return <Navigate to="/" replace />
 
@@ -25,6 +26,14 @@ export default function Login() {
   return (
     <div className="auth">
       <section className="auth-side">
+        {/* A golden shield forms over a family home: plays once, then rests on the protected last frame.
+            People who turn off motion see that last frame as a still image. */}
+        {reduceMotion ? (
+          <img className="auth-media" src="/login/protection-poster.jpg" alt="" />
+        ) : (
+          <video className="auth-media" src="/login/protection.mp4" poster="/login/protection-poster.jpg" autoPlay muted playsInline aria-hidden="true" />
+        )}
+        <div className="auth-shade" />
         <div className="wordmark">
           <span className="wordmark-name">WishDesk<span>.</span></span>
         </div>
