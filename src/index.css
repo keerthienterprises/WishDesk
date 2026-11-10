@@ -701,3 +701,25 @@ select { cursor: pointer; }
   .mode-choice { grid-template-columns: 1fr; }
   .mode-card-preview { max-width: 220px; }
 }
+
+/* Card preview gallery + full-size view */
+.gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; }
+.gallery-tile { display: flex; flex-direction: column; gap: 6px; padding: 6px; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); cursor: zoom-in; font: inherit; text-align: center; }
+.gallery-tile:hover { border-color: var(--green); }
+.gallery-img { display: block; aspect-ratio: 4 / 5; background: var(--sunken); border-radius: var(--r-sm); overflow: hidden; }
+.gallery-img img { width: 100%; height: 100%; object-fit: contain; display: block; }
+.gallery-name { font-size: 0.8rem; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.skeleton-box { display: block; width: 100%; height: 100%; background: linear-gradient(90deg, var(--sunken), #eef0ed, var(--sunken)); background-size: 200% 100%; animation: shimmer 1.2s infinite; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.lightbox { position: fixed; inset: 0; z-index: 150; background: rgba(15, 20, 18, 0.82); display: grid; place-items: center; padding: 16px; }
+.lightbox-inner { width: min(1000px, 100%); max-height: calc(100vh - 32px); display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r-lg); overflow: hidden; }
+.lightbox-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.lightbox-stage { position: relative; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 12px; background: var(--sunken); min-height: 300px; overflow: hidden; }
+.lightbox-stage img { max-width: calc(100% - 100px); max-height: calc(100vh - 140px); object-fit: contain; border-radius: var(--r-sm); box-shadow: var(--float); }
+.lightbox-arrow { flex-shrink: 0; width: 44px; height: 44px; border-radius: 50%; border: 1px solid var(--line-strong); background: var(--surface); display: grid; place-items: center; cursor: pointer; color: var(--ink); }
+.lightbox-arrow:disabled { opacity: 0.3; cursor: default; }
+@media (max-width: 760px) {
+  .gallery-grid { grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); }
+  .lightbox-stage img { max-width: calc(100% - 70px); }
+  .lightbox-arrow { width: 34px; height: 34px; }
+}

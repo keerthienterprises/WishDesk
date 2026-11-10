@@ -14,6 +14,7 @@ import { uploadImage } from '../lib/media'
 import { downloadFile } from '../lib/csv'
 import CardEditor from '../components/CardEditor'
 import BulkNames from '../components/BulkNames'
+import CardGallery from '../components/CardGallery'
 import { ImagePicker } from '../components/content'
 import { Field, PageHeader, Progress, Segmented, Spinner, TypeIcon } from '../components/ui'
 
@@ -272,6 +273,7 @@ export default function CardDesigner() {
               onBack={() => setStep(1)}
               onSave={save}
               saving={busy}
+              onExclude={(person) => setList((l) => ({ ...l, people: l.people.map((x) => (x.id === person.id ? { ...x, include: false } : x)) }))}
             />
           )}
         </>
@@ -298,7 +300,7 @@ function RowNavigator({ people, index, onIndex }) {
 }
 
 // Render every card, zip them, download
-function BulkGenerate({ image, layout, people, designName, makeVars, onBack, onSave, saving }) {
+function BulkGenerate({ image, layout, people, designName, makeVars, onBack, onSave, saving, onExclude }) {
   const toast = useToast()
   const [state, setState] = useState({ phase: 'ready' }) // ready | running | finished
   const cancelled = useRef(false)
@@ -371,7 +373,18 @@ function BulkGenerate({ image, layout, people, designName, makeVars, onBack, onS
     )
   }
 
+  if (!people.length) {
+    return (
+      <section className="card wizard-card">
+        <h3 className="section-title">No cards left to create</h3>
+        <p className="muted">Everyone was left out. Go back to Names and tick the people you want cards for.</p>
+        <div className="wizard-nav"><button className="btn btn-ghost" onClick={onBack}><ArrowLeft size={16} /> Design</button></div>
+      </section>
+    )
+  }
+
   return (
+    <>
     <section className="card wizard-card">
       <h3 className="section-title">Ready to create {people.length} cards</h3>
       <dl className="review-list">
@@ -385,5 +398,14 @@ function BulkGenerate({ image, layout, people, designName, makeVars, onBack, onS
         <button className="btn btn-primary" onClick={run}><FileArchive size={16} /> Create and download {people.length} cards</button>
       </div>
     </section>
+
+    <section className="card">
+      <div className="card-title-row">
+        <div className="card-title">Check every card</div>
+        <span className="muted small">Click a card to see it full size. Use Leave out to skip anyone.</span>
+      </div>
+      <CardGallery image={image} layout={layout} people={people} makeVars={makeVars} onExclude={onExclude} />
+    </section>
+    </>
   )
 }

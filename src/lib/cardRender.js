@@ -215,6 +215,23 @@ export async function renderCardBlob(image, layout, vars, quality = 0.92) {
     canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not create the card image'))), 'image/jpeg', quality))
 }
 
+/** A small personalised preview (object URL) for galleries; the caller revokes it when done. */
+export async function renderCardThumbnail(image, layout, vars, width = 360) {
+  await ensureFonts(layout, vars)
+  const img = await loadImage(image)
+  const full = document.createElement('canvas')
+  drawCard(full.getContext('2d'), img, layout, vars)
+  const thumb = document.createElement('canvas')
+  thumb.width = width
+  thumb.height = Math.round((full.height / full.width) * width)
+  const ctx = thumb.getContext('2d')
+  ctx.imageSmoothingQuality = 'high'
+  ctx.drawImage(full, 0, 0, thumb.width, thumb.height)
+  const blob = await new Promise((resolve, reject) =>
+    thumb.toBlob((b) => (b ? resolve(b) : reject(new Error('Could not create the preview'))), 'image/jpeg', 0.82))
+  return URL.createObjectURL(blob)
+}
+
 /** React hook: the personalised card for previews and thumbnails. */
 export function useCardImage(image, layout, { contact, company, sender } = {}) {
   const [url, setUrl] = useState(image)
