@@ -20,7 +20,8 @@ import Team from './pages/Team'
 import Settings from './pages/Settings'
 
 function FullScreen({ children }) {
-  return <div className="fullscreen-msg">{children}</div>
+  // One wrapper, so text and <code> pieces stay on one line instead of becoming separate grid cells
+  return <div className="fullscreen-msg"><div>{children}</div></div>
 }
 
 function RequireAuth() {
