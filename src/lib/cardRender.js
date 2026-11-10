@@ -112,7 +112,13 @@ export function loadFontFamily(family, query, text) {
   return system.fallback ? loadGoogleFont(system.fallback, FALLBACK_QUERY, text) : Promise.resolve()
 }
 
-const fieldText = (f, vars) => renderMessage(f.text, { ...vars, contact: vars?.contact ?? { full_name: '' } }).trim()
+// Field text for one card: {name}, {first_name}, {company}, {sender}, plus {Column} tokens
+// from a spreadsheet row (vars.extra = { Designation: 'Manager', ... })
+function fieldText(f, vars) {
+  let text = renderMessage(f.text, { ...vars, contact: vars?.contact ?? { full_name: '' } })
+  for (const [key, value] of Object.entries(vars?.extra ?? {})) text = text.replaceAll(`{${key}}`, value ?? '')
+  return text.trim()
+}
 
 /** Waits until every field's font can draw that field's text (vars give the client name). */
 export function ensureFonts(layout, vars = {}) {
@@ -197,6 +203,16 @@ export async function renderCard(image, layout, vars) {
   renderCache.set(key, url)
   if (renderCache.size > 60) renderCache.delete(renderCache.keys().next().value)
   return url
+}
+
+/** One personalised card as a JPEG Blob, for making many cards at once (not cached). */
+export async function renderCardBlob(image, layout, vars, quality = 0.92) {
+  await ensureFonts(layout, vars)
+  const img = await loadImage(image)
+  const canvas = document.createElement('canvas')
+  drawCard(canvas.getContext('2d'), img, layout, vars)
+  return new Promise((resolve, reject) =>
+    canvas.toBlob((blob) => (blob ? resolve(blob) : reject(new Error('Could not create the card image'))), 'image/jpeg', quality))
 }
 
 /** React hook: the personalised card for previews and thumbnails. */

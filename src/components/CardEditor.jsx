@@ -53,8 +53,13 @@ function FontSize({ value, onChange }) {
 /**
  * Place personalised text (client name etc.) on a greeting card.
  * `layout` is { fields: [...] }; changes are reported through onChange.
+ * Bulk mode passes `extraVariables` (spreadsheet column names usable as {Column}),
+ * `extraValues` (the previewed row's values) and `previewSlot` (a row navigator instead of the name box).
  */
-export default function CardEditor({ image, layout, onChange, previewName: controlledName, onPreviewNameChange }) {
+export default function CardEditor({
+  image, layout, onChange, previewName: controlledName, onPreviewNameChange,
+  extraVariables = [], extraValues = {}, previewSlot = null,
+}) {
   const { profile } = useAuth()
   const { settings } = useSettings()
   const fields = layout?.fields ?? []
@@ -70,7 +75,8 @@ export default function CardEditor({ image, layout, onChange, previewName: contr
   const stageRef = useRef(null)
 
   const selected = fields.find((f) => f.id === selectedId)
-  const vars = { contact: { full_name: previewName.trim() }, company: settings.company_name, sender: profile?.full_name }
+  const vars = { contact: { full_name: previewName.trim() }, company: settings.company_name, sender: profile?.full_name, extra: extraValues }
+  const extraKey = JSON.stringify(extraValues)
   const fontsKey = fields.map((f) => `${f.font}${f.bold}${f.italic}`).join('|')
 
   useEffect(() => {
@@ -79,12 +85,12 @@ export default function CardEditor({ image, layout, onChange, previewName: contr
 
   useEffect(() => {
     ensureFonts(layout, vars).then(() => setFontsTick((t) => t + 1))
-  }, [fontsKey, previewName]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [fontsKey, previewName, extraKey]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (!img || !canvasRef.current) return
     setBoxes(drawCard(canvasRef.current.getContext('2d'), img, layout, vars, { editing: true }))
-  }, [img, layout, previewName, settings.company_name, fontsTick]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [img, layout, previewName, extraKey, settings.company_name, fontsTick]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const setFields = (next) => onChange({ ...(layout ?? {}), fields: next })
   const update = (id, changes) => setFields(fields.map((f) => (f.id === id ? { ...f, ...changes } : f)))
@@ -188,9 +194,11 @@ export default function CardEditor({ image, layout, onChange, previewName: contr
       </div>
 
       <aside className="ce-panel">
-        <Field label="Preview with a name" hint="Optional, only for checking the fit. Each client gets their own name when you send.">
-          <input value={previewName} onChange={(e) => previewNameChanged(e.target.value)} placeholder="Type any client name" />
-        </Field>
+        {previewSlot ?? (
+          <Field label="Preview with a name" hint="Optional, only for checking the fit. Each client gets their own name when you send.">
+            <input value={previewName} onChange={(e) => previewNameChanged(e.target.value)} placeholder="Type any client name" />
+          </Field>
+        )}
 
         <div className="ce-fields">
           <div className="ce-fields-head">
@@ -215,6 +223,11 @@ export default function CardEditor({ image, layout, onChange, previewName: contr
               {MESSAGE_VARIABLES.map((v) => (
                 <button key={v.key} type="button" className="chip chip-button" onClick={() => update(selected.id, { text: v.key })} title={v.label}>
                   {v.label}
+                </button>
+              ))}
+              {extraVariables.map((col) => (
+                <button key={col} type="button" className="chip chip-button" onClick={() => update(selected.id, { text: `{${col}}` })} title={`Column "${col}" from your file`}>
+                  {col}
                 </button>
               ))}
             </div>

@@ -669,3 +669,35 @@ select { cursor: pointer; }
 @media (max-width: 1024px) {
   .auth-side { min-height: 260px; }
 }
+
+/* Card designer: one or many */
+.mode-choice { display: grid; grid-template-columns: minmax(180px, 280px) 1fr; gap: 28px; align-items: center; }
+.mode-card-preview { width: 100%; border-radius: var(--r); border: 1px solid var(--line); }
+.mode-options { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+.mode-options > p { margin-bottom: 6px; }
+.mode-option { display: flex; align-items: center; gap: 14px; width: 100%; padding: 16px; text-align: left; font: inherit; cursor: pointer; background: var(--surface); border: 1px solid var(--line-strong); border-radius: var(--r); color: var(--ink); }
+.mode-option:hover { border-color: var(--green); background: var(--green-wash); }
+.mode-option > span:nth-child(2) { flex: 1; display: flex; flex-direction: column; gap: 3px; }
+.mode-option > span:nth-child(2) span { color: var(--muted); font-size: 0.85rem; }
+.mode-option > svg { color: var(--muted); flex-shrink: 0; }
+.mode-icon { width: 44px; height: 44px; border-radius: var(--r); display: grid; place-items: center; background: var(--green-wash); color: var(--green); flex-shrink: 0; }
+
+/* Bulk names */
+.bulk-map { display: flex; flex-direction: column; gap: 6px; }
+.bulk-file { display: flex; align-items: center; gap: 8px; padding: 10px 12px; background: var(--sunken); border: 1px solid var(--line); border-radius: var(--r-sm); margin-bottom: 8px; flex-wrap: wrap; }
+.bulk-file svg { color: var(--green); }
+.table th.col-picked, .table td.col-picked { background: var(--green-wash); color: var(--green-dark); font-weight: 500; }
+.cell-input { padding: 5px 8px; border-color: transparent; background: transparent; }
+.cell-input:hover { border-color: var(--line-strong); }
+.cell-input:focus { background: var(--surface); }
+.row-nav { gap: 8px; }
+.row-nav-controls { display: flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); padding: 4px; }
+.row-nav-controls .icon-btn { width: 30px; height: 30px; }
+.row-nav-name { flex: 1; text-align: center; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.row-nav .btn { align-self: flex-start; }
+.bulk-progress { gap: 10px; }
+.bulk-done-head { display: flex; gap: 14px; align-items: flex-start; margin-bottom: 8px; }
+@media (max-width: 760px) {
+  .mode-choice { grid-template-columns: 1fr; }
+  .mode-card-preview { max-width: 220px; }
+}
