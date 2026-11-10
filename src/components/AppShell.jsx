@@ -89,7 +89,8 @@ export default function AppShell() {
           <button className="icon-btn menu-btn" onClick={() => setOpen(true)} aria-label="Open menu"><Menu size={20} /></button>
           <div className="topbar-date">{today}</div>
           <div className="topbar-actions">
-            {canManage && (
+            {/* The Dashboard banner has its own button */}
+            {canManage && location.pathname !== '/' && (
               <Link to="/campaigns/new" className="btn btn-primary btn-sm"><Plus size={16} /> New campaign</Link>
             )}
           </div>

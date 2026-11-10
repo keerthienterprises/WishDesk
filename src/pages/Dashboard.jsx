@@ -91,10 +91,10 @@ export default function Dashboard() {
       </div>
 
       <div className="stat-grid">
-        <StatCard label="Due today" value={lists.today.length} hint={`${pendingToday} still to send`} />
-        <StatCard label="Overdue" value={lists.overdue.length} tone={lists.overdue.length ? 'danger' : undefined} hint="From the last 30 days" />
+        <StatCard label="Due today" value={lists.today.length} hint={`${pendingToday} still to send`} accent="gold" />
+        <StatCard label="Overdue" value={lists.overdue.length} tone={lists.overdue.length ? 'danger' : undefined} hint="From the last 30 days" accent="danger" />
         <StatCard label="Sent in the last 7 days" value={sentThisWeek} tone="ok" />
-        <StatCard label="Coming up" value={lists.upcoming.length} hint="In the next 7 days" />
+        <StatCard label="Coming up" value={lists.upcoming.length} hint="In the next 7 days" accent="info" />
       </div>
 
       <div className="dash-grid">

@@ -33,10 +33,12 @@ export function PageHeader({ title, subtitle, actions }) {
   )
 }
 
-// One cell of the summary strip. Only 'danger' and 'ok' tones colour the number.
-export function StatCard({ label, value, tone, hint }) {
+// One cell of the summary strip. 'danger' and 'ok' tones colour the number;
+// `accent` (gold | danger | ok | info) colours the small rule above it, defaulting to the tone.
+export function StatCard({ label, value, tone, hint, accent }) {
+  const rule = accent ?? (tone === 'danger' || tone === 'ok' ? tone : null)
   return (
-    <div className={`stat ${tone === 'danger' || tone === 'ok' ? `stat-${tone}` : ''}`}>
+    <div className={`stat ${tone === 'danger' || tone === 'ok' ? `stat-${tone}` : ''} ${rule ? `stat-accent-${rule}` : ''}`}>
       <div className="stat-value">{value}</div>
       <div className="stat-label">{label}</div>
       {hint && <div className="stat-hint">{hint}</div>}
